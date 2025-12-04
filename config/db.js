@@ -10,17 +10,9 @@ const connectDB = async (retries = 5, delay = 5000) => {
 
     try {
         await mongoose.connect(uri);
-        console.log(`MongoDB Connected: ${mongoose.connection.host}`);
+        console.log(`MongoDB Connected Successfully.`);
     } catch (error) {
         console.error(`Database Connection Error: ${error.message}`);
-
-        if (retries > 0) {
-            console.log(`🔁 Retrying in ${delay / 10000}s... (${retries} retries left)`);
-            setTimeout(() => connectDB(retries - 1, delay), delay);
-        } else {
-            console.error("All retry attempts failed. Exiting process.");
-            process.exit(1);
-        }
     }
 };
 

@@ -11,6 +11,7 @@ const reviewRoutes = require("./routes/reviewRoutes");
 const bannerRoutes = require("./routes/bannerRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 const visitTracker = require("./middlewares/visitTracker");
+const homeRoutes = require("./routes/homeRoutes");
 
 connectDB();
 
@@ -26,6 +27,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/banners", bannerRoutes);
 app.use("/api/categories", categoryRoutes);
+app.use("api/home", homeRoutes);
 
 app.use((req, res) => {
     res.status(404).json({ message: "Response OK" });

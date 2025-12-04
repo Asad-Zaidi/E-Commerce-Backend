@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const ProductSchema = new mongoose.Schema({
     name: { type: String, required: true },
     description: { type: String },
+    seoDescription: { type: String },
     category: { type: String, required: true },
     priceMonthly: { type: Number },
     priceYearly: { type: Number },

@@ -1,11 +1,13 @@
 const Product = require('../models/Product');
 const cloudinary = require('../utils/cloudinary');
+const { generateSEODescription } = require("../services/aiService");
 
 const createProduct = async (req, res) => {
     try {
         const {
             name,
             description,
+            seoDescription,
             category,
             priceMonthly,
             priceYearly,
@@ -49,6 +51,7 @@ const createProduct = async (req, res) => {
         const product = await Product.create({
             name,
             description,
+            seoDescription,
             category,
             priceMonthly: priceMonthly != null ? Number(priceMonthly) : undefined,
             priceYearly: priceYearly != null ? Number(priceYearly) : undefined,
@@ -218,6 +221,53 @@ const getProductBySlug = async (req, res) => {
     }
 };
 
+const generateSEODescriptionController = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const product = await Product.findById(id);
+
+        if (!product) return res.status(404).json({ message: "Product not found" });
+
+        const seoText = await generateSEODescription(product);
+
+        product.seoDescription = seoText;
+        await product.save();
+
+        res.json({
+            success: true,
+            seoDescription: seoText
+        });
+
+    } catch (err) {
+        console.error("SEO Generation Error:", err);
+        res.status(500).json({ message: err.message });
+    }
+};
+
+const generateTempSEODescription = async (req, res) => {
+    try {
+        const { name, category, description } = req.body;
+
+        // Create a temporary product object for SEO generation
+        const tempProduct = {
+            name,
+            category,
+            description
+        };
+
+        const seoText = await generateSEODescription(tempProduct);
+
+        res.json({
+            success: true,
+            seoDescription: seoText
+        });
+
+    } catch (err) {
+        console.error("Temp SEO Generation Error:", err);
+        res.status(500).json({ message: err.message });
+    }
+};
+
 module.exports = {
     getPopularProducts,
     createProduct,
@@ -225,5 +275,7 @@ module.exports = {
     deleteProduct,
     listProducts,
     getProduct,
-    getProductBySlug
+    getProductBySlug,
+    generateSEODescriptionController,
+    generateTempSEODescription
 };

@@ -18,11 +18,11 @@ router.get(/^\/slug\/(.+)$/, async (req, res) => {
     }
 });
 router.get('/:id', productController.getProduct);
-
 router.get('/reviews/slug/:slug', reviewController.getReviewsByProductSlug);
-
 router.post('/', upload.single('image'), productController.createProduct);
 router.put('/:id', upload.single('image'), productController.updateProduct);
 router.delete('/:id', productController.deleteProduct);
+router.post("/:id/generate-seo", productController.generateSEODescriptionController);
+router.post("/temp/generate-seo", productController.generateTempSEODescription);
 
 module.exports = router;
