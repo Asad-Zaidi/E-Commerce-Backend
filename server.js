@@ -27,10 +27,10 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/banners", bannerRoutes);
 app.use("/api/categories", categoryRoutes);
-app.use("api/home", homeRoutes);
+app.use("/api/home", homeRoutes);
 
 app.use((req, res) => {
-    res.status(404).json({ message: "Response OK" });
+    res.status(404).json({ message: "Backend Running" });
 });
 
 const PORT = process.env.PORT || 5000;
