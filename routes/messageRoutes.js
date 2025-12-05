@@ -1,8 +1,7 @@
-import express from "express";
-import { sendMessage } from "../controllers/contactController.js";
-
+const express = require("express");
+const { sendMessage } = require("../controllers/contactController");
 const router = express.Router();
 
-router.post("/", sendMessage); // Public form submission route
+router.post("/", sendMessage);
 
-export default router;
+module.exports = router;
