@@ -1,23 +1,20 @@
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
-
-// Load ENV
-require("dotenv").config({
-    path: require("path").join(__dirname, "..", ".env")
-});
-
-// DB
 const connectDB = require("../config/db");
-connectDB();
 
-// Create app
 const app = express();
+
+// Middleware
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 app.use(morgan("dev"));
 
-// Middlewares
+// DB connection (connect once at startup)
+connectDB().then(() => console.log("MongoDB Connected"))
+            .catch(err => console.error("DB Connection Error:", err));
+
+// Visit tracker
 const visitTracker = require("../middlewares/visitTracker");
 app.use(visitTracker);
 
@@ -31,7 +28,7 @@ app.use("/api/categories", require("../routes/categoryRoutes"));
 app.use("/api/home", require("../routes/homeRoutes"));
 app.use("/api/contact", require("../routes/contactRoutes"));
 
-// Default Route
+// Default route
 app.get("/", (req, res) => {
     res.json({ message: "EDM Backend Running on Vercel" });
 });
