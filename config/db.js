@@ -7,13 +7,15 @@ const connectDB = async (retries = 5, delay = 5000) => {
         console.error("MongoDB URI not found in environment variables!");
         process.exit(1);
     }
-
-    try {
-        await mongoose.connect(uri);
+    await mongoose.connect(uri);
         console.log(`MongoDB Connected Successfully.`);
-    } catch (error) {
-        console.error(`Database Connection Error: ${error.message}`);
-    }
+
+    // try {
+    //     await mongoose.connect(uri);
+    //     console.log(`MongoDB Connected Successfully.`);
+    // } catch (error) {
+    //     console.error(`Database Connection Error: ${error.message}`);
+    // }
 };
 
 mongoose.connection.on("disconnected", () => {
