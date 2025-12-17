@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { createBanner, getBanners, deleteBanner, toggleBannerStatus } = require("../controllers/bannerController");
 const auth = require("../middlewares/authMiddleware");
-const adminOnly = require("../middlewares/adminMiddleware");
+const { adminOnly } = require("../middlewares/adminMiddleware");
 const multer = require("multer");
 
 const storage = multer.memoryStorage();

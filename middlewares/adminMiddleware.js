@@ -3,4 +3,7 @@ const adminOnly = (req, res, next) => {
     if (req.user.role !== 'admin') return res.status(403).json({ message: 'Require admin' });
     next();
 };
-module.exports = adminOnly;
+
+const verifyAdmin = adminOnly;
+
+module.exports = { adminOnly, verifyAdmin };

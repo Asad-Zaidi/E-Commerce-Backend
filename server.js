@@ -12,6 +12,8 @@ const bannerRoutes = require("./routes/bannerRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 const visitTracker = require("./middlewares/visitTracker");
 const homeRoutes = require("./routes/homeRoutes");
+const messageRoutes = require("./routes/messageRoutes");
+const contactRoutes = require("./routes/contactRoutes");
 
 connectDB();
 
@@ -28,6 +30,8 @@ app.use("/api/reviews", reviewRoutes);
 app.use("/api/banners", bannerRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/home", homeRoutes);
+app.use("/api/messages", messageRoutes);
+app.use("/api/contact", contactRoutes);
 
 app.use((req, res) => {
     res.status(404).json({ message: "Route not found" });

@@ -27,6 +27,7 @@ app.use("/api/banners", require("../routes/bannerRoutes"));
 app.use("/api/categories", require("../routes/categoryRoutes"));
 app.use("/api/home", require("../routes/homeRoutes"));
 app.use("/api/contact", require("../routes/contactRoutes"));
+app.use("/api/messages", require("../routes/messageRoutes"));
 
 // Default route
 app.get("/", (req, res) => {
