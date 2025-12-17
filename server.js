@@ -30,8 +30,7 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/home", homeRoutes);
 
 app.use((req, res) => {
-    res.send("Backend Running");
-    res.status(404).json({ message: "Not Found" });
+    res.status(404).json({ message: "Route not found" });
 });
 
 const PORT = process.env.PORT || 5000;

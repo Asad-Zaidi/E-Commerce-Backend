@@ -7,6 +7,7 @@ const Product = require('../models/Product');
 
 router.get('/', productController.listProducts);
 router.get('/popular', productController.getPopularProducts);
+router.get('/sitemap', productController.generateSitemap);
 router.get(/^\/slug\/(.+)$/, async (req, res) => {
     try {
         const slug = req.params[0];
@@ -17,12 +18,13 @@ router.get(/^\/slug\/(.+)$/, async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 });
-router.get('/:id', productController.getProduct);
 router.get('/reviews/slug/:slug', reviewController.getReviewsByProductSlug);
+router.post("/temp/generate-seo", productController.generateTempSEODescription);
+router.post("/temp/generate-meta-tags", productController.generateTempMetaTags);
 router.post('/', upload.single('image'), productController.createProduct);
+router.post("/:id/generate-seo", productController.generateSEODescriptionController);
+router.get('/:id', productController.getProduct);
 router.put('/:id', upload.single('image'), productController.updateProduct);
 router.delete('/:id', productController.deleteProduct);
-router.post("/:id/generate-seo", productController.generateSEODescriptionController);
-router.post("/temp/generate-seo", productController.generateTempSEODescription);
 
 module.exports = router;
