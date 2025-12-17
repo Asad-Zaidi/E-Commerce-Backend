@@ -170,7 +170,7 @@ const listProducts = async (req, res) => {
     try {
         const products = await Product.find()
             .sort({ createdAt: -1 })
-            .select("name category priceSharedMonthly priceSharedYearly privatePriceMonthly privatePriceYearly imageUrl avgRating totalReviews slug");
+            .select("name category description priceSharedMonthly priceSharedYearly privatePriceMonthly privatePriceYearly imageUrl avgRating totalReviews slug");
 
         // Ensure all price fields are always defined
         const response = products.map(product => ({
