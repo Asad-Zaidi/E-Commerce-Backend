@@ -14,6 +14,7 @@ const visitTracker = require("./middlewares/visitTracker");
 const homeRoutes = require("./routes/homeRoutes");
 const messageRoutes = require("./routes/messageRoutes");
 const contactRoutes = require("./routes/contactRoutes");
+const orderRoutes = require("./routes/orderRoutes");
 
 connectDB();
 
@@ -32,6 +33,7 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/home", homeRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/contact", contactRoutes);
+app.use("/api/orders", orderRoutes);
 
 app.use((req, res) => {
     res.status(404).json({ message: "Route not found" });
