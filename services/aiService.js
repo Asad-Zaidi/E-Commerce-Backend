@@ -294,4 +294,99 @@ function generateFallbackMetaTags(product) {
     };
 }
 
-module.exports = { generateSEODescription, generateMetaTags };
+// Generate a professional blog post using AI
+async function generateBlogPost(topic, category) {
+    try {
+        console.log('Generating blog post for topic:', topic);
+
+        const modelsToTry = [
+            "gemini-2.0-flash-exp",
+            "gemini-1.5-flash-latest",
+            "gemini-pro"
+        ];
+
+        let lastError = null;
+
+        for (const modelName of modelsToTry) {
+            try {
+                console.log(`Trying Gemini model: ${modelName}`);
+
+                const model = genAI.getGenerativeModel({
+                    model: modelName
+                });
+
+                const prompt = `
+                    Generate a professional, informative blog post about: "${topic}"
+                    
+                    Category: ${category || 'General'}
+                    
+                    Requirements:
+                    - Write a comprehensive blog post between 500-600 words
+                    - Use a professional and engaging tone
+                    - Include an introduction, main content with 3-4 key points, and conclusion
+                    - Make it informative, educational, and valuable to readers
+                    - Include actionable insights or tips
+                    - Write in HTML format with proper paragraph tags <p>, headings <h2>, <h3>, and lists <ul>, <li> where appropriate
+                    - NO markdown formatting (no ** or #)
+                    - Start directly with content, no title heading at the beginning
+                    - Focus on providing real value and expertise
+                    - Make it SEO-friendly with natural keyword usage
+                    
+                    Please provide only the blog content in HTML format without any additional text or explanation.
+                `;
+
+                const result = await model.generateContent(prompt);
+                const response = await result.response;
+                const blogContent = response.text().trim();
+
+                console.log(`✅ Successfully generated blog post using ${modelName}`);
+                
+                // Generate a short excerpt (first 150-200 characters)
+                const tempDiv = blogContent.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+                const excerpt = tempDiv.substring(0, 200).trim() + '...';
+
+                // Generate some relevant tags based on topic
+                const tags = generateTagsFromTopic(topic, category);
+
+                return {
+                    content: blogContent,
+                    excerpt: excerpt,
+                    tags: tags
+                };
+
+            } catch (modelError) {
+                console.log(`❌ Model ${modelName} failed:`, modelError.message);
+                lastError = modelError;
+            }
+        }
+
+        throw lastError || new Error('All AI models failed');
+
+    } catch (error) {
+        console.error('❌ Error generating blog post:', error);
+        throw new Error(`AI blog generation failed: ${error.message}`);
+    }
+}
+
+// Helper function to generate tags from topic
+function generateTagsFromTopic(topic, category) {
+    const tags = [];
+    
+    // Add category as a tag
+    if (category) {
+        tags.push(category.toLowerCase());
+    }
+    
+    // Extract key words from topic (simple approach)
+    const words = topic.toLowerCase()
+        .replace(/[^\w\s]/g, '')
+        .split(/\s+/)
+        .filter(word => word.length > 3);
+    
+    // Add up to 3 meaningful words as tags
+    tags.push(...words.slice(0, 3));
+    
+    return [...new Set(tags)]; // Remove duplicates
+}
+
+module.exports = { generateSEODescription, generateMetaTags, generateBlogPost };
