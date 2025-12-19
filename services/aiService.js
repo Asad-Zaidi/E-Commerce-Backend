@@ -1,78 +1,3 @@
-// const { GoogleGenerativeAI } = require("@google/generative-ai");
-
-// const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
-// async function generateSEODescription(product) {
-//     try {
-//         console.log('Generating SEO description for:', product.name);
-
-//         // Try different models in order of preference - updated model names
-//         const modelsToTry = [
-//             "gemini-2.0-flash"
-//         ];
-
-//         let lastError = null;
-
-//         for (const modelName of modelsToTry) {
-//             try {
-//                 console.log(`Trying Gemini model: ${modelName}`);
-
-//                 const model = genAI.getGenerativeModel({
-//                     model: modelName
-//                 });
-
-//                 const prompt = `
-//                     Generate an SEO-optimized product description for the following product:
-
-//                     Product Name: ${product.name}
-//                     Category: ${product.category}
-//                     Description: ${product.description || 'No description available'}
-
-//                     Requirements:
-//                     - Write an engaging, SEO-friendly description under 180 words
-//                     - Include relevant keywords naturally
-//                     - Highlight key benefits and features
-//                     - End with a compelling call-to-action
-//                     - Make it suitable for search engines and customers
-//                     - Focus on the product's value proposition and unique selling points
-
-//                     Please provide only the description text without any additional formatting or headers.
-//                 `;
-
-//                 const result = await model.generateContent(prompt);
-//                 const response = await result.response;
-//                 const seoDescription = response.text().trim();
-
-//                 console.log(`✅ Successfully generated SEO description using ${modelName}`);
-//                 return seoDescription;
-
-//             } catch (modelError) {
-//                 console.log(`❌ Model ${modelName} failed:`, modelError.message);
-//                 lastError = modelError;
-//                 continue; // Try next model
-//             }
-//         }
-
-//         // If all models failed, use fallback
-//         console.log('⚠️ All Gemini models failed, using fallback implementation');
-//         return generateFallbackSEO(product);
-
-//     } catch (error) {
-//         console.error('❌ Error in generateSEODescription:', error);
-//         return generateFallbackSEO(product);
-//     }
-// }
-
-// function generateFallbackSEO(product) {
-//     const { name, category, description } = product;
-
-//     const fallbackDescription = `${name} - Discover the ultimate ${category} solution. ${description || 'Experience premium quality and exceptional performance.'} Choose ${name} today for reliable service and outstanding results. Get started now and elevate your experience!`;
-
-//     return fallbackDescription.length > 180 ? fallbackDescription.substring(0, 177) + '...' : fallbackDescription;
-// }
-
-// module.exports = { generateSEODescription };
-
 
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
@@ -95,9 +20,9 @@ async function generateSEODescription(product) {
 
         // 2. Optimization: Added stable models for redundancy
         const modelsToTry = [
-            "gemini-2.0-flash-exp", // Latest experimental model
-            "gemini-1.5-flash-latest", // Stable/Cost-effective
-            "gemini-pro"    // Fallback
+            "gemini-2.0-flash", // Latest and most stable
+            "gemini-1.5-pro",   // High quality
+            "gemini-1.5-flash"  // Fast/cost-effective
         ];
 
         for (const modelName of modelsToTry) {
@@ -176,9 +101,9 @@ function generateFallbackSEO(product) {
 
     // Create comprehensive fallback with all three aspects
     const keywordRich = `${name} is a premium ${category || 'product'} designed to meet your needs. ${description ? description.substring(0, 80) : 'Experience exceptional quality and performance with this cutting-edge solution.'} Perfect for professionals and enthusiasts alike.`;
-    
+
     const features = `This product features advanced technology, user-friendly design, and reliable performance. Built with quality materials and tested for durability, ${name} delivers consistent results every time.`;
-    
+
     const benefits = `Get more done with ${name} while saving time and effort. Backed by excellent support and competitive pricing, this is the smart choice for your ${category || 'needs'}. Order today and experience the difference!`;
 
     const rawFallback = `${keywordRich} ${features} ${benefits}`;
@@ -201,9 +126,9 @@ async function generateMetaTags(product) {
         console.log('Generating meta tags for:', product.name);
 
         const modelsToTry = [
-            "gemini-2.0-flash-exp",
-            "gemini-1.5-flash-latest",
-            "gemini-pro"
+            "gemini-2.0-flash",
+            "gemini-1.5-pro",
+            "gemini-1.5-flash"
         ];
 
         for (const modelName of modelsToTry) {
@@ -229,13 +154,13 @@ async function generateMetaTags(product) {
                     {
                         "metaTitle": "50-60 characters max, include product name and category",
                         "metaDescription": "150-160 characters max, compelling description with benefits",
-                        "metaKeywords": "8-10 relevant keywords separated by commas, lowercase"
+                        "metaKeywords": "10-15 relevant keywords separated by commas, lowercase"
                     }
 
                     Requirements:
                     - Meta title must be under 60 characters
                     - Meta description must be 150-160 characters
-                    - Keywords must be 8-10 items, comma-separated, lowercase, relevant to product
+                    - Keywords must be 10-15 items, comma-separated, lowercase, relevant to product and also in asian market context like Pakistani styled long tail keywords.
                     - Return ONLY valid JSON, no markdown, no explanations
                 `;
 
@@ -271,6 +196,108 @@ async function generateMetaTags(product) {
     }
 }
 
+// Keyword research and intent classification using Gemini
+async function generateKeywordResearch(product) {
+    if (!product || !product.name) {
+        console.warn("⚠️ Invalid product data for keyword research");
+        return generateFallbackKeywordResearch(product || { name: "product", category: "general" });
+    }
+
+    try {
+        console.log('Generating keyword research for:', product.name);
+
+        const modelsToTry = [
+            "gemini-2.0-flash",
+            "gemini-1.5-pro",
+            "gemini-1.5-flash"
+        ];
+
+        for (const modelName of modelsToTry) {
+            try {
+                const model = genAI.getGenerativeModel({
+                    model: modelName,
+                    generationConfig: {
+                        temperature: 0.4,
+                        maxOutputTokens: 800,
+                    },
+                });
+
+                const prompt = `
+Return JSON only (no markdown) with keyword research for the product below. Include reasonable estimated monthly search volume and CPC directionally (no need to be exact), plus intent classification.
+
+Product name: ${product.name}
+Category: ${product.category || 'general'}
+Description: ${product.description || 'No description provided'}
+
+Output format:
+{
+  "trending": [ {"keyword": "string", "intent": "informational|transactional|navigational|commercial", "volume": number, "cpc": number} ],
+  "longTail": [ {"keyword": "string", "intent": "...", "volume": number, "cpc": number} ],
+  "transactional": [ {"keyword": "string", "intent": "transactional", "volume": number, "cpc": number} ],
+  "informational": [ {"keyword": "string", "intent": "informational", "volume": number, "cpc": number} ],
+  "navigational": [ {"keyword": "string", "intent": "navigational", "volume": number, "cpc": number} ],
+  "pakistaniSearches": [ {"keyword": "string in Pakistani/South Asian English tone", "intent": "commercial|transactional", "volume": number 500-5000, "cpc": number 0.1-0.5} ],
+  "summary": "one-sentence guidance on targeting"
+}
+
+Rules:
+- Standard lists: 5-8 items per list, no duplicates across lists.
+- volume: integer estimate 10-50000; cpc: float estimate 0-10 (USD-equivalent).
+- Pakistani searches: 5-7 items reflecting South Asian search behavior and language patterns for this product category (colloquial phrasing, local relevance). Generate naturally based on product type.
+- Ensure JSON is valid and parsable.
+`;
+
+                const result = await model.generateContent(prompt);
+                const response = await result.response;
+                let text = response.text().trim();
+
+                // Strip possible code fences
+                text = text.replace(/```json\n?/gi, '').replace(/```/g, '').trim();
+
+                const parsed = JSON.parse(text);
+                if (parsed?.trending && parsed?.longTail && parsed?.summary) {
+                    console.log(`✅ Keyword research generated via ${modelName}`);
+                    return parsed;
+                }
+                throw new Error("Keyword research JSON missing required fields");
+
+            } catch (modelError) {
+                console.warn(`⚠️ Model ${modelName} failed for keyword research:`, modelError.message);
+                continue;
+            }
+        }
+
+        return generateFallbackKeywordResearch(product);
+    } catch (error) {
+        console.error('❌ Error generating keyword research:', error);
+        return generateFallbackKeywordResearch(product);
+    }
+}
+
+function generateFallbackKeywordResearch(product) {
+    const base = (suffix) => `${product?.name || 'product'} ${suffix}`.trim();
+    const makeEntry = (keyword, intent, volume, cpc) => ({ keyword, intent, volume, cpc });
+
+    const result = {
+        trending: [makeEntry(base('deal'), 'transactional', 1200, 1.2)],
+        longTail: [makeEntry(base('best pricing 2025'), 'commercial', 300, 2.1)],
+        transactional: [makeEntry(base('buy online'), 'transactional', 900, 3.0)],
+        informational: [makeEntry(base('guide'), 'informational', 700, 0.5)],
+        navigational: [makeEntry(base('official site'), 'navigational', 500, 0.8)],
+        pakistaniSearches: [
+            makeEntry(base('pakistan'), 'commercial', 1500, 0.2),
+            makeEntry(base('urdu guide'), 'informational', 800, 0.1),
+            makeEntry(base('cheap'), 'transactional', 1200, 0.25),
+            makeEntry(base('best'), 'commercial', 1000, 0.3),
+            makeEntry(base('affordable'), 'transactional', 900, 0.15),
+            makeEntry(base('easy'), 'informational', 700, 0.1),
+        ],
+        summary: 'Focus on transactional and commercial terms; support with informational guides.',
+    };
+
+    return result;
+}
+
 function generateFallbackMetaTags(product) {
     const { name, category, description } = product;
 
@@ -300,9 +327,9 @@ async function generateBlogPost(topic, category) {
         console.log('Generating blog post for topic:', topic);
 
         const modelsToTry = [
-            "gemini-2.0-flash-exp",
-            "gemini-1.5-flash-latest",
-            "gemini-pro"
+            "gemini-2.0-flash",
+            "gemini-1.5-pro",
+            "gemini-1.5-flash"
         ];
 
         let lastError = null;
@@ -340,7 +367,7 @@ async function generateBlogPost(topic, category) {
                 const blogContent = response.text().trim();
 
                 console.log(`✅ Successfully generated blog post using ${modelName}`);
-                
+
                 // Generate a short excerpt (first 150-200 characters)
                 const tempDiv = blogContent.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
                 const excerpt = tempDiv.substring(0, 200).trim() + '...';
@@ -371,22 +398,22 @@ async function generateBlogPost(topic, category) {
 // Helper function to generate tags from topic
 function generateTagsFromTopic(topic, category) {
     const tags = [];
-    
+
     // Add category as a tag
     if (category) {
         tags.push(category.toLowerCase());
     }
-    
+
     // Extract key words from topic (simple approach)
     const words = topic.toLowerCase()
         .replace(/[^\w\s]/g, '')
         .split(/\s+/)
         .filter(word => word.length > 3);
-    
+
     // Add up to 3 meaningful words as tags
     tags.push(...words.slice(0, 3));
-    
+
     return [...new Set(tags)]; // Remove duplicates
 }
 
-module.exports = { generateSEODescription, generateMetaTags, generateBlogPost };
+module.exports = { generateSEODescription, generateMetaTags, generateBlogPost, generateKeywordResearch };

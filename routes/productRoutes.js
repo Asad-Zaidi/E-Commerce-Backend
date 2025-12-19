@@ -21,6 +21,7 @@ router.get(/^\/slug\/(.+)$/, async (req, res) => {
 router.get('/reviews/slug/:slug', reviewController.getReviewsByProductSlug);
 router.post("/temp/generate-seo", productController.generateTempSEODescription);
 router.post("/temp/generate-meta-tags", productController.generateTempMetaTags);
+router.post("/temp/keyword-research", productController.generateKeywordResearchController);
 router.post('/', upload.single('image'), productController.createProduct);
 router.post("/:id/generate-seo", productController.generateSEODescriptionController);
 router.get('/:id', productController.getProduct);

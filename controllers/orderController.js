@@ -1,4 +1,76 @@
 const Order = require('../models/Order');
+const nodemailer = require('nodemailer');
+
+// Configure email transporter
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_PASSWORD,
+    },
+});
+
+// Send email notification helper
+const sendEmailNotification = async (order, status) => {
+    try {
+        let subject = '';
+        let message = '';
+
+        if (status === 'confirmed') {
+            subject = '✅ Your Order Has Been Confirmed';
+            message = `<h2>Order Confirmed!</h2>
+                <p>Dear ${order.customerName},</p>
+                <p>Your order (ID: <strong>${order._id}</strong>) has been confirmed.</p>
+                <p><strong>Items:</strong></p>
+                <ul>
+                    ${order.items.map(item => `<li>${item.productName} - Rs. ${item.price}</li>`).join('')}
+                </ul>
+                <p><strong>Total: Rs. ${order.total}</strong></p>
+                <p>You will receive your credentials/access details shortly.</p>`;
+        } else if (status === 'completed') {
+            subject = '🎉 Your Order is Complete - Check Your Email for Credentials';
+            message = `<h2>Order Complete!</h2>
+                <p>Dear ${order.customerName},</p>
+                <p>Your order (ID: <strong>${order._id}</strong>) has been completed successfully!</p>
+                <p><strong>Ordered Items:</strong></p>
+                <ul>
+                    ${order.items.map(item => `<li><strong>${item.productName}</strong> - ${item.selectedPlan || 'Standard'} (${item.accessType || 'Direct Access'})</li>`).join('')}
+                </ul>
+                <p style="background-color: #e0f2fe; padding: 15px; border-radius: 5px; border-left: 4px solid #0284c7;">
+                    <strong>📧 Check your email for ${order.items.map(item => item.productName).join(', ')} credentials and access details!</strong>
+                </p>
+                <p>If you don't see your credentials in the next few minutes, please check your spam folder.</p>
+                <p>Thank you for your purchase!</p>`;
+        } else if (status === 'cancelled') {
+            subject = '❌ Your Order Has Been Cancelled';
+            message = `<h2>Order Cancelled</h2>
+                <p>Dear ${order.customerName},</p>
+                <p>Your order (ID: <strong>${order._id}</strong>) has been cancelled.</p>
+                <p>If you have any questions, please contact us.</p>`;
+        }
+
+        if (subject && message) {
+            await transporter.sendMail({
+                from: process.env.GMAIL_USER,
+                to: order.customerEmail,
+                subject,
+                html: `
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa; border-radius: 5px;">
+                        ${message}
+                        <hr style="margin-top: 30px; border: none; border-top: 1px solid #ddd;">
+                        <p style="color: #666; font-size: 12px; text-align: center;">
+                            EDM Website © 2024 - All Rights Reserved
+                        </p>
+                    </div>
+                `,
+            });
+            console.log(`✅ Email sent to ${order.customerEmail} for status: ${status}`);
+        }
+    } catch (err) {
+        console.error('❌ Error sending email:', err);
+        // Don't throw error - continue processing
+    }
+};
 
 // Create a new order
 exports.createOrder = async (req, res) => {
@@ -96,6 +168,9 @@ exports.updateOrderStatus = async (req, res) => {
         if (!order) {
             return res.status(404).json({ message: 'Order not found' });
         }
+
+        // Send email notification
+        await sendEmailNotification(order, status);
 
         res.json({ message: 'Order status updated', order });
     } catch (err) {

@@ -1,6 +1,18 @@
 const Product = require('../models/Product');
 const cloudinary = require('../utils/cloudinary');
-const { generateSEODescription, generateMetaTags } = require("../services/aiService");
+const { generateSEODescription, generateMetaTags, generateKeywordResearch } = require("../services/aiService");
+
+// Mirror the slug generation used in the Product model
+const buildSlug = (name, category) => {
+    const toSlug = (val) => val
+        .toLowerCase()
+        .replace(/\s+/g, '-')
+        .replace(/[^\w-]/g, '')
+        .replace(/-+/g, '-')
+        .replace(/^-+|-+$/g, '');
+
+    return `${toSlug(category)}/${toSlug(name)}`;
+};
 
 const createProduct = async (req, res) => {
     try {
@@ -20,6 +32,14 @@ const createProduct = async (req, res) => {
             privatePriceMonthly,
             privatePriceYearly,
         } = req.body;
+
+        // Prevent duplicates on (name, category)
+        const existing = await Product.findOne({ name, category });
+        if (existing) {
+            return res.status(409).json({
+                message: "A product with the same name already exists in this category.",
+            });
+        }
         
         console.log("📊 Extracted prices:", {
             priceSharedMonthly,
@@ -97,6 +117,11 @@ const createProduct = async (req, res) => {
         
         res.json(product);
     } catch (err) {
+        if (err.code === 11000 && err.keyPattern?.slug) {
+            return res.status(409).json({
+                message: "A product with this name already exists in this category. Please choose a different name or category.",
+            });
+        }
         console.error("❌ Product Creation Error:", err);
         res.status(500).json({ message: err.message });
     }
@@ -110,6 +135,20 @@ const updateProduct = async (req, res) => {
         if (!product) return res.status(404).json({ message: "Product not found" });
 
         let updates = { ...req.body };
+
+        // Prevent duplicates when changing name/category
+        if ((updates.name && updates.name !== product.name) || (updates.category && updates.category !== product.category)) {
+            const dup = await Product.findOne({
+                name: updates.name || product.name,
+                category: updates.category || product.category,
+                _id: { $ne: id }
+            });
+            if (dup) {
+                return res.status(409).json({
+                    message: "A product with the same name already exists in this category.",
+                });
+            }
+        }
 
         // Handle image upload to Cloudinary if provided
         if (req.file) {
@@ -142,6 +181,11 @@ const updateProduct = async (req, res) => {
         const updated = await product.save();
         res.json(updated);
     } catch (err) {
+        if (err.code === 11000 && err.keyPattern?.slug) {
+            return res.status(409).json({
+                message: "A product with this name already exists in this category. Please choose a different name or category.",
+            });
+        }
         console.error(err);
         res.status(500).json({ message: err.message });
     }
@@ -324,6 +368,24 @@ const generateTempMetaTags = async (req, res) => {
     }
 };
 
+const generateKeywordResearchController = async (req, res) => {
+    try {
+        const { name, category, description } = req.body;
+
+        if (!name) {
+            return res.status(400).json({ message: "Product name is required for keyword research" });
+        }
+
+        const tempProduct = { name, category, description };
+        const data = await generateKeywordResearch(tempProduct);
+
+        res.json({ success: true, ...data });
+    } catch (err) {
+        console.error("Keyword Research Error:", err);
+        res.status(500).json({ message: err.message });
+    }
+};
+
 const generateSitemap = async (req, res) => {
     try {
         const products = await Product.find().select('slug updatedAt imageUrl');
@@ -388,5 +450,6 @@ module.exports = {
     generateSEODescriptionController,
     generateTempSEODescription,
     generateTempMetaTags,
+    generateKeywordResearchController,
     generateSitemap
 };
