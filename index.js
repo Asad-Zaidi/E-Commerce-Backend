@@ -31,7 +31,7 @@ app.use("/api/messages", require("../routes/messageRoutes"));
 
 // Default route
 app.get("/", (req, res) => {
-    res.json({ message: "EDM Backend Running on Vercel" });
+    res.json({ message: "Backend Running on Vercel" });
 });
 
 module.exports = app;

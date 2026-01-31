@@ -59,7 +59,7 @@ const sendEmailNotification = async (order, status) => {
                         ${message}
                         <hr style="margin-top: 30px; border: none; border-top: 1px solid #ddd;">
                         <p style="color: #666; font-size: 12px; text-align: center;">
-                            EDM Website © 2024 - All Rights Reserved
+                            E-Commerce Website © 2024 - All Rights Reserved
                         </p>
                     </div>
                 `,
