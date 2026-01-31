@@ -39,6 +39,10 @@ app.use("/api/orders", orderRoutes);
 app.use("/api", sitemapRoutes);
 app.use("/api/blog", blogRoutes);
 
+app.get("/", (req, res) => {
+    res.status(200).json({ message: "Server is running" });
+});
+
 app.use((req, res) => {
     res.status(404).json({ message: "Route not found" });
 });
