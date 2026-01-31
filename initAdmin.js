@@ -3,20 +3,10 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const User = require('./models/User');
 const connectDB = require('./config/db');
-const readline = require('readline');
 
-const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-});
-
-const prompt = (question) => {
-    return new Promise((resolve) => {
-        rl.question(question, (answer) => {
-            resolve(answer);
-        });
-    });
-};
+const ADMIN_NAME = 'Admin';
+const ADMIN_EMAIL = 'admin@example.com';
+const ADMIN_PASSWORD = 'admin123';
 
 const initAdmin = async () => {
     try {
@@ -34,31 +24,23 @@ const initAdmin = async () => {
             console.log(`   Email: ${existingAdmin.email}`);
             console.log(`   Name: ${existingAdmin.name || 'N/A'}`);
             
-            const proceed = await prompt('\nDo you want to create another admin? (yes/no): ');
-            if (proceed.toLowerCase() !== 'yes' && proceed.toLowerCase() !== 'y') {
-                console.log('\n👋 Exiting without creating new admin.\n');
-                rl.close();
-                process.exit(0);
-            }
+            console.log('\n👋 Exiting without creating new admin.\n');
+            process.exit(0);
         }
 
-        // Get admin details
-        console.log('\n📝 Enter Admin Details:\n');
-        
-        const name = await prompt('   Name: ');
-        const email = await prompt('   Email: ');
-        const password = await prompt('   Password (min 6 characters): ');
+        // Hardcoded admin details
+        const name = ADMIN_NAME;
+        const email = ADMIN_EMAIL;
+        const password = ADMIN_PASSWORD;
 
         // Validate inputs
         if (!email || !password) {
             console.log('\n❌ Email and password are required!\n');
-            rl.close();
             process.exit(1);
         }
 
         if (password.length < 6) {
             console.log('\n❌ Password must be at least 6 characters!\n');
-            rl.close();
             process.exit(1);
         }
 
@@ -66,7 +48,6 @@ const initAdmin = async () => {
         const existingUser = await User.findOne({ email: email.toLowerCase() });
         if (existingUser) {
             console.log('\n❌ A user with this email already exists!\n');
-            rl.close();
             process.exit(1);
         }
 
@@ -91,7 +72,6 @@ const initAdmin = async () => {
     } catch (error) {
         console.error('\n❌ Error:', error.message, '\n');
     } finally {
-        rl.close();
         await mongoose.connection.close();
         console.log('📴 Database connection closed.\n');
         process.exit(0);
