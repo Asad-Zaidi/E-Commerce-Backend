@@ -18,9 +18,6 @@ const orderSchema = new mongoose.Schema({
     
     // Billing Info
     company: String,
-    country: { type: String, default: 'Pakistan' },
-    city: { type: String, required: true },
-    address: { type: String, required: true },
     
     // Items
     items: [orderItemSchema],
@@ -28,12 +25,10 @@ const orderSchema = new mongoose.Schema({
     // Totals
     subtotal: { type: Number, required: true },
     discount: { type: Number, default: 0 },
-    processingFee: { type: Number, default: 0 },
     total: { type: Number, required: true },
     
     // Payment
     paymentMethod: { type: String, enum: ['wallet', 'card'], default: 'wallet' },
-    couponCode: String,
     
     // Notes
     note: String,

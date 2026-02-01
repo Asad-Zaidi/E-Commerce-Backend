@@ -80,21 +80,16 @@ exports.createOrder = async (req, res) => {
             customerEmail,
             customerPhone,
             company,
-            country,
-            city,
-            address,
             items,
             subtotal,
             discount,
-            processingFee,
             total,
             paymentMethod,
-            couponCode,
             note,
         } = req.body;
 
         // Validate required fields
-        if (!customerName || !customerEmail || !customerPhone || !city || !address || !items || items.length === 0) {
+        if (!customerName || !customerEmail || !customerPhone || !items || items.length === 0) {
             return res.status(400).json({ message: 'Missing required fields' });
         }
 
@@ -103,16 +98,11 @@ exports.createOrder = async (req, res) => {
             customerEmail,
             customerPhone,
             company,
-            country,
-            city,
-            address,
             items,
             subtotal,
             discount,
-            processingFee,
             total,
             paymentMethod,
-            couponCode,
             note,
             status: 'pending',
         });
