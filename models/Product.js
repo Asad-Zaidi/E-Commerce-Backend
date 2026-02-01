@@ -21,13 +21,18 @@ const ProductSchema = new mongoose.Schema({
     slug: { type: String, unique: true }
 });
 
-ProductSchema.pre('save', function (next) {
-    if (this.isModified('name') || this.isModified('category') || !this.slug) {
-        const nameSlug = this.name.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '').replace(/-+/g, '-').replace(/^-+|-+$/g, '');
-        const categorySlug = this.category.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '').replace(/-+/g, '-').replace(/^-+|-+$/g, '');
-        this.slug = `${categorySlug}/${nameSlug}`;
+ProductSchema.pre('save', async function (next) {
+    if (this.name && this.category) {
+        if (this.isModified('name') || this.isModified('category') || !this.slug) {
+            try {
+                const nameSlug = this.name.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '').replace(/-+/g, '-').replace(/^-+|-+$/g, '');
+                const categorySlug = this.category.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '').replace(/-+/g, '-').replace(/^-+|-+$/g, '');
+                this.slug = `${categorySlug}/${nameSlug}`;
+            } catch (error) {
+                throw error;
+            }
+        }
     }
-    next();
 });
 
 module.exports = mongoose.model('Product', ProductSchema);

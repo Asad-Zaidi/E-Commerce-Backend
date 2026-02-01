@@ -20,17 +20,18 @@ const BlogPostSchema = new mongoose.Schema({
 });
 
 // Auto-generate slug from title
-BlogPostSchema.pre('save', function (next) {
-    if (this.isModified('title') || !this.slug) {
-        this.slug = this.title
-            .toLowerCase()
-            .replace(/[^\w\s-]/g, '')
-            .replace(/\s+/g, '-')
-            .replace(/-+/g, '-')
-            .replace(/^-+|-+$/g, '');
+BlogPostSchema.pre('save', async function () {
+    if (this.title) {
+        if (this.isModified('title') || !this.slug) {
+            this.slug = this.title
+                .toLowerCase()
+                .replace(/[^\w\s-]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-')
+                .replace(/^-+|-+$/g, '');
+        }
     }
     this.updatedAt = Date.now();
-    next();
 });
 
 module.exports = mongoose.model('BlogPost', BlogPostSchema);
