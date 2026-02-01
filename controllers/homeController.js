@@ -3,6 +3,42 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const genAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null;
 const INTRO_MODEL = "gemini-2.0-flash";
+const FALLBACK_INTRO = {
+    title: "One Platform. Unlimited Digital Power.",
+    subtitle: "Discover, subscribe, and manage the best digital tools — all from a single dashboard. Enjoy trusted access, flexible plans, and instant activation for everything from AI tools to entertainment and productivity apps."
+};
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const isRateLimitError = (err) => {
+    const message = (err && (err.message || err.toString())) || "";
+    return (
+        message.includes("429") ||
+        message.toLowerCase().includes("rate_limit_exceeded") ||
+        message.toLowerCase().includes("quota")
+    );
+};
+
+const generateIntroWithRetry = async (prompt) => {
+    const model = genAI.getGenerativeModel({ model: INTRO_MODEL });
+    const maxAttempts = 3;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+            const result = await model.generateContent(prompt);
+            const response = await result.response;
+            return response.text();
+        } catch (err) {
+            if (isRateLimitError(err) && attempt < maxAttempts) {
+                const delay = 500 * Math.pow(2, attempt - 1) + Math.floor(Math.random() * 250);
+                console.warn(`⚠️ Gemini rate limit hit. Retrying in ${delay}ms (attempt ${attempt}/${maxAttempts})`);
+                await sleep(delay);
+                continue;
+            }
+            throw err;
+        }
+    }
+};
 
 // GET current home page data
 exports.getHomeSections = async (req, res) => {
@@ -147,10 +183,7 @@ JSON FORMAT:
 }
 `;
 
-        const model = genAI.getGenerativeModel({ model: INTRO_MODEL });
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const raw = response.text();
+        const raw = await generateIntroWithRetry(prompt);
 
         const cleaned = raw.replace(/```json|```/gi, "").trim();
 
@@ -178,6 +211,14 @@ JSON FORMAT:
         });
 
     } catch (err) {
+        if (isRateLimitError(err)) {
+            console.warn("⚠️ Gemini rate limit exceeded. Returning fallback intro.");
+            return res.status(200).json({
+                intro: FALLBACK_INTRO,
+                fallback: true
+            });
+        }
+
         console.error("AI intro generation failed:", err.message);
         return res.status(500).json({
             message: "Failed to generate intro",

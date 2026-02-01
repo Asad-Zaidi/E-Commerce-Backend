@@ -7,6 +7,9 @@ if (!process.env.GEMINI_API_KEY) {
 }
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const PRIMARY_GEMINI_MODEL = "gemini-2.5-pro";
+
+console.log(`Gemini (${PRIMARY_GEMINI_MODEL}) is running.`);
 
 async function generateSEODescription(product) {
     // 1. Validation: specific check for product name
@@ -20,9 +23,10 @@ async function generateSEODescription(product) {
 
         // 2. Optimization: Added stable models for redundancy
         const modelsToTry = [
-            "gemini-2.0-flash", // Latest and most stable
-            "gemini-1.5-pro",   // High quality
-            "gemini-1.5-flash"  // Fast/cost-effective
+            "gemini-2.5-pro",
+            "gemini-2.5-flash",
+            "gemini-2.0-flash",
+            "gemini-2.5-flash-lite"
         ];
 
         for (const modelName of modelsToTry) {
@@ -126,9 +130,10 @@ async function generateMetaTags(product) {
         console.log('Generating meta tags for:', product.name);
 
         const modelsToTry = [
+            "gemini-2.5-pro",
+            "gemini-2.5-flash",
             "gemini-2.0-flash",
-            "gemini-1.5-pro",
-            "gemini-1.5-flash"
+            "gemini-2.5-flash-lite"
         ];
 
         for (const modelName of modelsToTry) {
@@ -207,9 +212,10 @@ async function generateKeywordResearch(product) {
         console.log('Generating keyword research for:', product.name);
 
         const modelsToTry = [
+            "gemini-2.5-pro",
+            "gemini-2.5-flash",
             "gemini-2.0-flash",
-            "gemini-1.5-pro",
-            "gemini-1.5-flash"
+            "gemini-2.5-flash-lite"
         ];
 
         for (const modelName of modelsToTry) {
@@ -327,9 +333,10 @@ async function generateBlogPost(topic, category) {
         console.log('Generating blog post for topic:', topic);
 
         const modelsToTry = [
-            "gemini-2.0-flash",
-            "gemini-1.5-pro",
-            "gemini-1.5-flash"
+            "gemini-2.5-pro",
+            "gemini-2.5-flash",
+            "gemini-2.5-flash-lite",
+            "gemini-2.0-flash"
         ];
 
         let lastError = null;
