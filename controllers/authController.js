@@ -194,4 +194,89 @@ const clearCart = async (req, res) => {
     }
 };
 
-module.exports = { registerAdmin, signup, login, getProfile, updateProfile, changePassword, getCart, updateCart, clearCart };
+// Forgot password - Send OTP
+const forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ message: 'Email is required' });
+
+        const user = await User.findOne({ email });
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        // Generate OTP
+        const otp = user.generatePasswordResetOtp();
+        await user.save();
+
+        // TODO: Send OTP to email using email service
+        // For now, log it or return it (remove in production)
+        console.log(`OTP for ${email}: ${otp}`);
+
+        res.status(200).json({ message: 'OTP sent to your email', otp }); // Remove otp from response in production
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+// Verify OTP (Step 2 - before password reset)
+const verifyOtp = async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+        
+        if (!email || !otp) {
+            return res.status(400).json({ message: 'Email and OTP are required' });
+        }
+
+        const user = await User.findOne({ 
+            email, 
+            resetPasswordOtp: otp,
+            resetPasswordOtpExpire: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({ message: 'Invalid or expired OTP' });
+        }
+
+        res.status(200).json({ message: 'OTP verified successfully' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+// Verify OTP and Reset password
+const resetPassword = async (req, res) => {
+    try {
+        const { email, otp, newPassword, confirmPassword } = req.body;
+        
+        if (!email || !otp || !newPassword || !confirmPassword) {
+            return res.status(400).json({ message: 'All fields are required' });
+        }
+
+        if (newPassword !== confirmPassword) {
+            return res.status(400).json({ message: 'Passwords do not match' });
+        }
+
+        if (newPassword.length < 6) {
+            return res.status(400).json({ message: 'Password must be at least 6 characters' });
+        }
+
+        const user = await User.findOne({ 
+            email, 
+            resetPasswordOtp: otp,
+            resetPasswordOtpExpire: { $gt: Date.now() }
+        });
+
+        if (!user) return res.status(400).json({ message: 'Invalid or expired OTP' });
+
+        // Update password
+        user.password = await bcrypt.hash(newPassword, 10);
+        user.resetPasswordOtp = null;
+        user.resetPasswordOtpExpire = null;
+        await user.save();
+
+        res.status(200).json({ message: 'Password has been reset successfully' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+module.exports = { registerAdmin, signup, login, getProfile, updateProfile, changePassword, getCart, updateCart, clearCart, forgotPassword, verifyOtp, resetPassword };
